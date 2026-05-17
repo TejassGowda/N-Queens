@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N-Queens Problem — Algorithm Comparison</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3e;
+    --accent1: #00ffcc;
+    --accent2: #ff6b6b;
+    --accent3: #ffd93d;
+    --accent4: #6bceff;
+    --text: #e8e8f0;
+    --muted: #6a6a8a;
+    --grid-line: rgba(0,255,204,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Space Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      repeating-linear-gradient(0deg, var(--grid-line) 0, var(--grid-line) 1px, transparent 1px, transparent 60px),
+      repeating-linear-gradient(90deg, var(--grid-line) 0, var(--grid-line) 1px, transparent 1px, transparent 60px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .header {
+    position: relative;
+    z-index: 1;
+    padding: 48px 40px 32px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(0,255,204,0.03) 0%, transparent 100%);
+  }
+
+  .header-tag {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--accent1);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1px;
+  }
+
+  h1 span { color: var(--accent1); }
+
+  .subtitle {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+    max-width: 600px;
+  }
+
+  .main {
+    position: relative;
+    z-index: 1;
+    padding: 32px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Control Panel */
+  .control-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    margin-bottom: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 24px;
+    align-items: end;
+  }
+
+  .field-group label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent1);
+    margin-bottom: 10px;
+  }
+
+  .algo-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .algo-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    transition: all 0.2s;
+    user-select: none;
+    position: relative;
+  }
+
+  .algo-check:hover { border-color: var(--accent1); }
+  .algo-check.active { background: rgba(0,255,204,0.06); }
+
+  .algo-check input { display: none; }
+
+  .algo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .n-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .n-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .n-btn:hover, .n-btn.active {
+    border-color: var(--accent1);
+    color: var(--accent1);
+    background: rgba(0,255,204,0.05);
+  }
+
+  .run-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 14px 32px;
+    background: var(--accent1);
+    color: var(--bg);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    align-self: end;
+  }
+
+  .run-btn:hover { background: #00e6b8; transform: translateY(-1px); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Progress */
+  .progress-bar-wrap {
+    display: none;
+    margin-bottom: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .progress-bar-bg {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent1);
+    width: 0%;
+    transition: width 0.3s;
+    box-shadow: 0 0 8px rgba(0,255,204,0.5);
+  }
+
+  /* Results Grid */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .algo-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .algo-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .algo-card.dfs::before { background: var(--accent2); }
+  .algo-card.greedy::before { background: var(--accent3); }
+  .algo-card.sa::before { background: var(--accent4); }
+  .algo-card.ga::before { background: var(--accent1); }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .card-subtitle {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+
+  .stat-label { color: var(--muted); letter-spacing: 1px; }
+
+  .stat-val {
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .stat-val.good { color: var(--accent1); }
+  .stat-val.warn { color: var(--accent3); }
+  .stat-val.bad  { color: var(--accent2); }
+  .stat-val.info { color: var(--accent4); }
+
+  .status-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-left: 8px;
+  }
+
+  .badge-ok { background: rgba(0,255,204,0.15); color: var(--accent1); }
+  .badge-approx { background: rgba(107,206,255,0.15); color: var(--accent4); }
+  .badge-fail { background: rgba(255,107,107,0.15); color: var(--accent2); }
+  .badge-timeout { background: rgba(255,217,61,0.15); color: var(--accent3); }
+
+  /* Main chart area */
+  .chart-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    margin-bottom: 28px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent1);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .chart-canvas-wrap {
+    position: relative;
+    height: 320px;
+  }
+
+  canvas { width: 100% !important; }
+
+  /* Board Visualizer */
+  .board-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    margin-bottom: 28px;
+  }
+
+  .board-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .board-tab {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .board-tab.active {
+    color: var(--text);
+    border-color: var(--accent1);
+    background: rgba(0,255,204,0.06);
+  }
+
+  .board-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    align-items: flex-start;
+  }
+
+  .board-wrap {
+    flex: 0 0 auto;
+  }
+
+  .board-grid {
+    display: inline-grid;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .board-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: background 0.1s;
+  }
+
+  .board-cell.light { background: #1e1e2e; }
+  .board-cell.dark  { background: #141420; }
+  .board-cell.queen { background: rgba(0,255,204,0.12); }
+  .board-cell.queen.dark { background: rgba(0,255,204,0.08); }
+
+  .board-info {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .board-info h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .board-info p {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+    letter-spacing: 0.5px;
+  }
+
+  .placement-list {
+    margin-top: 16px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    line-height: 2;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  /* Table */
+  .table-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    margin-bottom: 28px;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    min-width: 600px;
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent1);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(42,42,62,0.5);
+    white-space: nowrap;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .td-algo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  .empty-state .qs { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  /* Notes */
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .note-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+  }
+
+  .note-card h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .note-card p {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .note-card.dfs h4 { color: var(--accent2); }
+  .note-card.greedy h4 { color: var(--accent3); }
+  .note-card.sa h4 { color: var(--accent4); }
+  .note-card.ga h4 { color: var(--accent1); }
+
+  @media (max-width: 768px) {
+    .main, .header { padding: 24px 20px; }
+    .control-panel { grid-template-columns: 1fr; }
+    h1 { font-size: 28px; }
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--bg);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .tooltip {
+    position: relative;
+  }
+  .tooltip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    font-size: 10px;
+    border-radius: 2px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-tag">Algorithm Analysis</div>
+  <h1>N-<span>Queens</span> Problem<br>Solver & Comparator</h1>
+  <p class="subtitle">Exhaustive DFS · Greedy Hill-Climbing · Simulated Annealing · Genetic Algorithm — Live benchmarking in your browser</p>
+</div>
+
+<div class="main">
+
+  <!-- Controls -->
+  <div class="control-panel">
+    <div class="field-group">
+      <label>Algorithms</label>
+      <div class="algo-checkboxes">
+        <label class="algo-check active" id="chk-dfs">
+          <input type="checkbox" checked> <span class="algo-dot" style="background:var(--accent2)"></span> DFS Exhaustive
+        </label>
+        <label class="algo-check active" id="chk-greedy">
+          <input type="checkbox" checked> <span class="algo-dot" style="background:var(--accent3)"></span> Greedy
+        </label>
+        <label class="algo-check active" id="chk-sa">
+          <input type="checkbox" checked> <span class="algo-dot" style="background:var(--accent4)"></span> Sim. Annealing
+        </label>
+        <label class="algo-check active" id="chk-ga">
+          <input type="checkbox" checked> <span class="algo-dot" style="background:var(--accent1)"></span> Genetic
+        </label>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>N Values (select to run)</label>
+      <div class="n-grid" id="n-grid"></div>
+    </div>
+    <button class="run-btn" id="run-btn" onclick="runAll()">▶ RUN</button>
+  </div>
+
+  <div class="progress-bar-wrap" id="progress-wrap">
+    <div class="progress-label" id="progress-label">Running…</div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="results-grid" id="summary-cards">
+    <div class="algo-card dfs"><div class="card-title" style="color:var(--accent2)">DFS Exhaustive</div><div class="card-subtitle">Backtracking depth-first search</div><div class="empty-state"><div class="qs">♛</div>Run to see results</div></div>
+    <div class="algo-card greedy"><div class="card-title" style="color:var(--accent3)">Greedy Hill-Climbing</div><div class="card-subtitle">Local search heuristic</div><div class="empty-state"><div class="qs">♛</div>Run to see results</div></div>
+    <div class="algo-card sa"><div class="card-title" style="color:var(--accent4)">Simulated Annealing</div><div class="card-subtitle">Probabilistic local search</div><div class="empty-state"><div class="qs">♛</div>Run to see results</div></div>
+    <div class="algo-card ga"><div class="card-title" style="color:var(--accent1)">Genetic Algorithm</div><div class="card-subtitle">Evolutionary optimization</div><div class="empty-state"><div class="qs">♛</div>Run to see results</div></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-section">
+    <div class="section-title">Execution Time (ms) — Log Scale</div>
+    <div class="legend" id="time-legend"></div>
+    <div class="chart-canvas-wrap"><canvas id="timeChart"></canvas></div>
+  </div>
+
+  <div class="chart-section">
+    <div class="section-title">Memory Usage (KB) — Estimated</div>
+    <div class="legend" id="mem-legend"></div>
+    <div class="chart-canvas-wrap"><canvas id="memChart"></canvas></div>
+  </div>
+
+  <!-- Board Visualizer -->
+  <div class="board-section">
+    <div class="section-title">Board Visualizer</div>
+    <div class="board-tabs" id="board-tabs"></div>
+    <div class="board-display" id="board-display">
+      <div class="empty-state" style="width:100%"><div class="qs">♛</div>Run algorithms to visualize solutions</div>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div class="table-section">
+    <div class="section-title">Full Results Table</div>
+    <table id="results-table">
+      <thead>
+        <tr>
+          <th>Algorithm</th><th>N</th><th>Time (ms)</th><th>Memory (KB)</th>
+          <th>Solution Found</th><th>Conflicts</th><th>Nodes / Iterations</th>
+        </tr>
+      </thead>
+      <tbody id="results-tbody">
+        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px">No data yet — click RUN</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Algorithm Notes -->
+  <div class="notes-grid">
+    <div class="note-card dfs">
+      <h4>DFS Exhaustive</h4>
+      <p>Pure backtracking depth-first search. Guaranteed to find a solution if one exists. Exponential worst-case time O(N!) — feasible only for small N. Uses implicit call stack memory. For large N (≥30), a timeout of 5 seconds is applied.</p>
+    </div>
+    <div class="note-card greedy">
+      <h4>Greedy Hill-Climbing</h4>
+      <p>Places queens column by column, always choosing the row with minimum conflicts. Very fast O(N²) construction but can get stuck in local optima. Runs a random-restart loop to escape local minima. Often finds approximate solutions for large N quickly.</p>
+    </div>
+    <div class="note-card sa">
+      <h4>Simulated Annealing</h4>
+      <p>Starts with a random permutation, then iteratively swaps queen positions, accepting worse solutions with probability e^(-ΔE/T). Temperature cools geometrically. Balances exploration and exploitation — usually finds exact solutions up to N=500.</p>
+    </div>
+    <div class="note-card ga">
+      <h4>Genetic Algorithm</h4>
+      <p>Population of N-permutations evolves via tournament selection, order-crossover (OX), and mutation. Fitness = N*(N-1)/2 − conflicts. Elitism preserves best individuals. Scales well; typically converges within hundreds of generations for large N.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== ALGORITHM IMPLEMENTATIONS ====================
+
+// Utility
+function randomInt(a, b) { return Math.floor(Math.random() * (b - a)) + a; }
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = randomInt(0, i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Count conflicts for a placement array (queens[col] = row, all cols have exactly one queen)
+function countConflicts(queens) {
+  const n = queens.length;
+  let c = 0;
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++)
+      if (queens[i] === queens[j] || Math.abs(queens[i] - queens[j]) === Math.abs(i - j))
+        c++;
+  return c;
+}
+
+// ---- 1. DFS Exhaustive ----
+function solveDFS(n, timeLimit = 5000) {
+  const queens = new Array(n).fill(-1);
+  const rowUsed = new Array(n).fill(false);
+  const diag1 = new Array(2 * n).fill(false); // row - col
+  const diag2 = new Array(2 * n).fill(false); // row + col
+  let nodes = 0;
+  let solution = null;
+  const start = performance.now();
+
+  function bt(col) {
+    if (col === n) { solution = queens.slice(); return true; }
+    if (performance.now() - start > timeLimit) return 'timeout';
+    for (let row = 0; row < n; row++) {
+      if (!rowUsed[row] && !diag1[row - col + n] && !diag2[row + col]) {
+        queens[col] = row;
+        rowUsed[row] = true;
+        diag1[row - col + n] = true;
+        diag2[row + col] = true;
+        nodes++;
+        const res = bt(col + 1);
+        if (res === true) return true;
+        if (res === 'timeout') return 'timeout';
+        queens[col] = -1;
+        rowUsed[row] = false;
+        diag1[row - col + n] = false;
+        diag2[row + col] = false;
+      }
+    }
+    return false;
+  }
+
+  const r = bt(0);
+  const elapsed = performance.now() - start;
+  const timedOut = r === 'timeout';
+  const mem = timedOut ? nodes * 0.05 : (solution ? n * 0.008 + nodes * 0.05 : 0);
+  return {
+    solution: timedOut ? null : solution,
+    time: elapsed,
+    nodes,
+    conflicts: solution ? 0 : -1,
+    memory: Math.max(mem, n * 0.004),
+    timedOut,
+    exact: !timedOut && solution !== null
+  };
+}
+
+// ---- 2. Greedy Hill-Climbing ----
+function solveGreedy(n, maxRestarts = 200) {
+  let bestConflicts = Infinity;
+  let bestSolution = null;
+  let totalIter = 0;
+
+  for (let r = 0; r < maxRestarts; r++) {
+    // Build initial placement: column-wise minimum-conflict
+    const queens = new Array(n).fill(0);
+    // Initialize randomly
+    for (let c = 0; c < n; c++) queens[c] = randomInt(0, n);
+
+    // Hill-climbing: for each column, pick row with min conflicts
+    let changed = true;
+    let iters = 0;
+    while (changed && iters < n * 3) {
+      changed = false;
+      for (let c = 0; c < n; c++) {
+        let minC = Infinity, bestRow = queens[c];
+        for (let row = 0; row < n; row++) {
+          queens[c] = row;
+          const cc = countConflictsForCol(queens, c, n);
+          if (cc < minC) { minC = cc; bestRow = row; }
+        }
+        if (bestRow !== queens[c]) { queens[c] = bestRow; changed = true; }
+      }
+      iters++;
+      totalIter++;
+    }
+    const conf = countConflicts(queens);
+    if (conf < bestConflicts) {
+      bestConflicts = conf;
+      bestSolution = queens.slice();
+    }
+    if (bestConflicts === 0) break;
+  }
+
+  return {
+    solution: bestSolution,
+    conflicts: bestConflicts,
+    nodes: totalIter,
+    memory: n * 0.016 + totalIter * 0.001,
+    exact: bestConflicts === 0
+  };
+}
+
+function countConflictsForCol(queens, col, n) {
+  let c = 0;
+  for (let j = 0; j < n; j++) {
+    if (j === col) continue;
+    if (queens[j] === queens[col] || Math.abs(queens[j] - queens[col]) === Math.abs(j - col))
+      c++;
+  }
+  return c;
+}
+
+// ---- 3. Simulated Annealing ----
+function solveSA(n) {
+  // Start with a permutation (one queen per row AND per col)
+  const queens = Array.from({length: n}, (_, i) => i);
+  shuffle(queens);
+
+  let current = queens.slice();
+  let curConf = countConflicts(current);
+  let best = current.slice();
+  let bestConf = curConf;
+
+  let T = Math.max(2.0, n * 0.5);
+  const Tmin = 0.01;
+  const alpha = n <= 100 ? 0.9995 : 0.99998;
+  const maxIter = n <= 50 ? 200000 : n <= 200 ? 800000 : 3000000;
+  let iter = 0;
+
+  while (T > Tmin && iter < maxIter && bestConf > 0) {
+    // Random swap of two positions
+    const i = randomInt(0, n);
+    let j = randomInt(0, n - 1);
+    if (j >= i) j++;
+
+    [current[i], current[j]] = [current[j], current[i]];
+    const newConf = countConflicts(current);
+    const dE = newConf - curConf;
+
+    if (dE < 0 || Math.random() < Math.exp(-dE / T)) {
+      curConf = newConf;
+      if (curConf < bestConf) {
+        bestConf = curConf;
+        best = current.slice();
+      }
+    } else {
+      [current[i], current[j]] = [current[j], current[i]]; // revert
+    }
+
+    T *= alpha;
+    iter++;
+  }
+
+  return {
+    solution: best,
+    conflicts: bestConf,
+    nodes: iter,
+    memory: n * 0.016 + 0.5,
+    exact: bestConf === 0
+  };
+}
+
+// ---- 4. Genetic Algorithm ----
+function solveGA(n) {
+  const POPSIZE = Math.min(Math.max(50, n * 2), 300);
+  const MAXGEN = n <= 50 ? 2000 : n <= 200 ? 5000 : 10000;
+  const MUT_RATE = 0.08;
+  const TOURNAMENT = 5;
+  const ELITE = Math.max(2, Math.floor(POPSIZE * 0.05));
+
+  const maxFit = n * (n - 1) / 2;
+
+  function fitness(ind) {
+    return maxFit - countConflicts(ind);
+  }
+
+  function randInd() {
+    const a = Array.from({length: n}, (_, i) => i);
+    return shuffle(a);
+  }
+
+  // Order crossover (OX)
+  function crossover(p1, p2) {
+    const s = randomInt(0, n), e = randomInt(s + 1, n + 1);
+    const child = new Array(n).fill(-1);
+    for (let i = s; i < e; i++) child[i] = p1[i];
+    let idx = e % n;
+    for (let k = 0; k < n; k++) {
+      const gene = p2[(e + k) % n];
+      if (!child.includes(gene)) {
+        child[idx] = gene;
+        idx = (idx + 1) % n;
+      }
+    }
+    return child;
+  }
+
+  function mutate(ind) {
+    const i = randomInt(0, n);
+    let j = randomInt(0, n - 1);
+    if (j >= i) j++;
+    [ind[i], ind[j]] = [ind[j], ind[i]];
+    return ind;
+  }
+
+  function tournament(pop, fits) {
+    let best = -1, bestF = -1;
+    for (let k = 0; k < TOURNAMENT; k++) {
+      const idx = randomInt(0, pop.length);
+      if (fits[idx] > bestF) { bestF = fits[idx]; best = idx; }
+    }
+    return pop[best];
+  }
+
+  let pop = Array.from({length: POPSIZE}, randInd);
+  let fits = pop.map(fitness);
+  let bestIdx = fits.indexOf(Math.max(...fits));
+  let bestSol = pop[bestIdx].slice();
+  let bestFit = fits[bestIdx];
+
+  for (let gen = 0; gen < MAXGEN && bestFit < maxFit; gen++) {
+    // Sort by fitness descending
+    const sorted = Array.from({length: POPSIZE}, (_, i) => i)
+      .sort((a, b) => fits[b] - fits[a]);
+
+    const newPop = [];
+    // Elitism
+    for (let e = 0; e < ELITE; e++) newPop.push(pop[sorted[e]].slice());
+
+    while (newPop.length < POPSIZE) {
+      const p1 = tournament(pop, fits);
+      const p2 = tournament(pop, fits);
+      let child = crossover(p1, p2);
+      if (Math.random() < MUT_RATE) child = mutate(child);
+      newPop.push(child);
+    }
+
+    pop = newPop;
+    fits = pop.map(fitness);
+    const bi = fits.indexOf(Math.max(...fits));
+    if (fits[bi] > bestFit) {
+      bestFit = fits[bi];
+      bestSol = pop[bi].slice();
+    }
+  }
+
+  const conf = maxFit - bestFit;
+  return {
+    solution: bestSol,
+    conflicts: conf,
+    nodes: MAXGEN,
+    memory: POPSIZE * n * 0.008,
+    exact: conf === 0
+  };
+}
+
+// ==================== UI STATE ====================
+const N_VALUES = [10, 30, 50, 100, 200, 500];
+let selectedN = new Set([10, 30, 50, 100]);
+let allResults = []; // {algo, n, time, memory, conflicts, nodes, solution, exact, timedOut}
+let timeChart, memChart;
+let boardResults = {}; // n -> {algo -> solution}
+
+// ==================== SETUP ====================
+function setup() {
+  // N buttons
+  const grid = document.getElementById('n-grid');
+  N_VALUES.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'n-btn' + (selectedN.has(n) ? ' active' : '');
+    btn.textContent = n;
+    btn.onclick = () => {
+      if (selectedN.has(n)) selectedN.delete(n);
+      else selectedN.add(n);
+      btn.classList.toggle('active');
+    };
+    grid.appendChild(btn);
+  });
+
+  // Checkbox toggle
+  ['dfs','greedy','sa','ga'].forEach(id => {
+    const el = document.getElementById('chk-' + id);
+    const inp = el.querySelector('input');
+    el.onclick = () => {
+      inp.checked = !inp.checked;
+      el.classList.toggle('active', inp.checked);
+    };
+  });
+
+  initCharts();
+}
+
+function getSelectedAlgos() {
+  return {
+    dfs:    document.getElementById('chk-dfs').querySelector('input').checked,
+    greedy: document.getElementById('chk-greedy').querySelector('input').checked,
+    sa:     document.getElementById('chk-sa').querySelector('input').checked,
+    ga:     document.getElementById('chk-ga').querySelector('input').checked,
+  };
+}
+
+// ==================== CHARTS ====================
+function initCharts() {
+  const shared = {
+    type: 'line',
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 600 },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#6a6a8a', font: { family: 'Space Mono', size: 10 } },
+          title: { display: true, text: 'N (Board Size)', color: '#6a6a8a', font: { family: 'Space Mono', size: 10 } }
+        },
+        y: {
+          type: 'logarithmic',
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#6a6a8a', font: { family: 'Space Mono', size: 10 },
+            callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(1)
+          }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a26',
+          borderColor: '#2a2a3e',
+          borderWidth: 1,
+          titleFont: { family: 'Space Mono', size: 10 },
+          bodyFont: { family: 'Space Mono', size: 11 },
+          titleColor: '#6a6a8a',
+          bodyColor: '#e8e8f0'
+        }
+      }
+    }
+  };
+
+  const tctx = document.getElementById('timeChart').getContext('2d');
+  timeChart = new Chart(tctx, { ...shared, data: { labels: [], datasets: [] } });
+
+  const mctx = document.getElementById('memChart').getContext('2d');
+  memChart = new Chart(mctx, { ...shared, data: { labels: [], datasets: [] } });
+}
+
+const ALGO_META = {
+  dfs:    { label: 'DFS Exhaustive', color: '#ff6b6b' },
+  greedy: { label: 'Greedy',         color: '#ffd93d' },
+  sa:     { label: 'Sim. Annealing', color: '#6bceff' },
+  ga:     { label: 'Genetic Algo',   color: '#00ffcc' },
+};
+
+function updateCharts() {
+  const ns = [...selectedN].sort((a,b)=>a-b);
+  const algos = getSelectedAlgos();
+
+  const timeDatasets = [], memDatasets = [];
+
+  Object.entries(algos).forEach(([algo, enabled]) => {
+    if (!enabled) return;
+    const meta = ALGO_META[algo];
+    const tData = [], mData = [];
+
+    ns.forEach(n => {
+      const r = allResults.find(x => x.algo === algo && x.n === n);
+      tData.push(r ? Math.max(r.time, 0.01) : null);
+      mData.push(r ? Math.max(r.memory, 0.1) : null);
+    });
+
+    const ds = {
+      label: meta.label,
+      data: tData,
+      borderColor: meta.color,
+      backgroundColor: meta.color + '22',
+      pointBackgroundColor: meta.color,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      borderWidth: 2,
+      tension: 0.3,
+      spanGaps: false
+    };
+    timeDatasets.push(ds);
+    memDatasets.push({ ...ds, data: mData });
+  });
+
+  timeChart.data = { labels: ns.map(String), datasets: timeDatasets };
+  memChart.data  = { labels: ns.map(String), datasets: memDatasets };
+  timeChart.update();
+  memChart.update();
+
+  // Legends
+  updateLegend('time-legend', algos);
+  updateLegend('mem-legend', algos);
+}
+
+function updateLegend(id, algos) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  Object.entries(algos).forEach(([algo, on]) => {
+    if (!on) return;
+    const m = ALGO_META[algo];
+    el.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${m.color}"></div>${m.label}</div>`;
+  });
+}
+
+// ==================== SUMMARY CARDS ====================
+function updateSummaryCards() {
+  const algos = ['dfs','greedy','sa','ga'];
+  algos.forEach(algo => {
+    const card = document.querySelector('.algo-card.' + algo);
+    const results = allResults.filter(r => r.algo === algo);
+    if (!results.length) return;
+
+    const meta = ALGO_META[algo];
+    const bestTime = Math.min(...results.map(r => r.time));
+    const worstTime = Math.max(...results.map(r => r.time));
+    const avgMem = results.reduce((s,r)=>s+r.memory,0)/results.length;
+    const exact = results.filter(r => r.exact).length;
+
+    card.innerHTML = `
+      <div class="card-title" style="color:${meta.color}">${meta.label}</div>
+      <div class="card-subtitle">${['DFS Exhaustive','Greedy Hill-Climbing','Simulated Annealing','Genetic Algorithm'][['dfs','greedy','sa','ga'].indexOf(algo)]}</div>
+      <div class="stat-row"><span class="stat-label">Best Time</span><span class="stat-val good">${fmtTime(bestTime)}</span></div>
+      <div class="stat-row"><span class="stat-label">Worst Time</span><span class="stat-val ${worstTime > 5000 ? 'bad' : 'warn'}">${fmtTime(worstTime)}</span></div>
+      <div class="stat-row"><span class="stat-label">Avg Memory</span><span class="stat-val info">${avgMem.toFixed(1)} KB</span></div>
+      <div class="stat-row"><span class="stat-label">Exact Solutions</span><span class="stat-val ${exact===results.length?'good':'warn'}">${exact}/${results.length}</span></div>
+    `;
+  });
+}
+
+// ==================== BOARD VISUALIZER ====================
+function updateBoard() {
+  const tabs = document.getElementById('board-tabs');
+  const display = document.getElementById('board-display');
+  tabs.innerHTML = '';
+
+  const ns = Object.keys(boardResults).map(Number).sort((a,b)=>a-b);
+  if (!ns.length) return;
+
+  ns.forEach((n, i) => {
+    const tab = document.createElement('button');
+    tab.className = 'board-tab' + (i === 0 ? ' active' : '');
+    tab.textContent = `N = ${n}`;
+    tab.onclick = () => {
+      document.querySelectorAll('.board-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderBoard(n, display);
+    };
+    tabs.appendChild(tab);
+  });
+
+  renderBoard(ns[0], display);
+}
+
+function renderBoard(n, display) {
+  const algos = boardResults[n];
+  if (!algos) return;
+
+  const cellSize = Math.max(8, Math.min(36, Math.floor(400 / n)));
+  const maxCols = Math.min(n, Math.floor(400 / cellSize));
+
+  display.innerHTML = '';
+
+  Object.entries(algos).forEach(([algo, sol]) => {
+    if (!sol) return;
+    const meta = ALGO_META[algo];
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'flex:0 0 auto;';
+
+    const title = document.createElement('div');
+    title.style.cssText = `font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;color:${meta.color};margin-bottom:10px;text-transform:uppercase;`;
+    title.textContent = meta.label;
+    wrap.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'board-grid';
+    grid.style.gridTemplateColumns = `repeat(${n}, ${cellSize}px)`;
+
+    for (let row = 0; row < n; row++) {
+      for (let col = 0; col < n; col++) {
+        const cell = document.createElement('div');
+        cell.className = 'board-cell ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+        cell.style.width = cell.style.height = cellSize + 'px';
+        // sol[col] = row in our permutation (queens[col] = row)
+        if (sol[col] === row) {
+          cell.classList.add('queen');
+          if (cellSize >= 14) cell.textContent = '♛';
+          cell.style.color = meta.color;
+          cell.style.fontSize = (cellSize * 0.65) + 'px';
+        }
+        grid.appendChild(cell);
+      }
+    }
+    wrap.appendChild(grid);
+
+    const conf = countConflicts(sol);
+    const info = document.createElement('div');
+    info.style.cssText = 'margin-top:8px;font-size:10px;color:var(--muted);letter-spacing:1px;';
+    info.textContent = `Conflicts: ${conf} | ${conf === 0 ? '✓ EXACT SOLUTION' : '~ APPROXIMATE'}`;
+    if (conf === 0) info.style.color = 'var(--accent1)';
+    wrap.appendChild(info);
+
+    display.appendChild(wrap);
+  });
+}
+
+// ==================== TABLE ====================
+function updateTable() {
+  const tbody = document.getElementById('results-tbody');
+  const sorted = [...allResults].sort((a,b)=>{
+    const algOrder = ['dfs','greedy','sa','ga'];
+    const ai = algOrder.indexOf(a.algo), bi = algOrder.indexOf(b.algo);
+    if (ai !== bi) return ai - bi;
+    return a.n - b.n;
+  });
+
+  if (!sorted.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px">No data</td></tr>'; return; }
+
+  tbody.innerHTML = sorted.map(r => {
+    const meta = ALGO_META[r.algo];
+    const badge = r.timedOut ? `<span class="status-badge badge-timeout">TIMEOUT</span>`
+      : r.exact ? `<span class="status-badge badge-ok">EXACT</span>`
+      : `<span class="status-badge badge-approx">APPROX</span>`;
+    const confStr = r.conflicts < 0 ? '—' : r.conflicts === 0 ? '<span style="color:var(--accent1)">0</span>' : `<span style="color:var(--accent3)">${r.conflicts}</span>`;
+    return `
+      <tr>
+        <td class="td-algo" style="color:${meta.color}">${meta.label}</td>
+        <td>${r.n}</td>
+        <td>${fmtTime(r.time)}</td>
+        <td>${r.memory.toFixed(1)} KB</td>
+        <td>${badge}</td>
+        <td>${confStr}</td>
+        <td>${r.nodes.toLocaleString()}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ==================== MAIN RUN ====================
+async function runAll() {
+  const algos = getSelectedAlgos();
+  const ns = [...selectedN].sort((a,b)=>a-b);
+
+  if (!ns.length || !Object.values(algos).some(Boolean)) {
+    alert('Select at least one N value and one algorithm.');
+    return;
+  }
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>RUNNING';
+
+  const pw = document.getElementById('progress-wrap');
+  const pf = document.getElementById('progress-fill');
+  const pl = document.getElementById('progress-label');
+  pw.style.display = 'block';
+
+  const tasks = [];
+  Object.entries(algos).forEach(([algo, en]) => {
+    if (en) ns.forEach(n => tasks.push({algo, n}));
+  });
+
+  allResults = allResults.filter(r =>
+    !(tasks.some(t => t.algo === r.algo && t.n === r.n))
+  );
+  boardResults = {};
+
+  for (let i = 0; i < tasks.length; i++) {
+    const {algo, n} = tasks[i];
+    pf.style.width = (i / tasks.length * 100) + '%';
+    pl.textContent = `Running ${ALGO_META[algo].label} · N = ${n}…`;
+    await sleep(10);
+
+    const t0 = performance.now();
+    let res;
+
+    try {
+      if (algo === 'dfs') {
+        const timeLimit = n <= 20 ? 10000 : n <= 30 ? 8000 : 5000;
+        res = solveDFS(n, timeLimit);
+      } else if (algo === 'greedy') {
+        const r = solveGreedy(n);
+        res = { ...r, time: performance.now() - t0 };
+      } else if (algo === 'sa') {
+        const r = solveSA(n);
+        res = { ...r, time: performance.now() - t0 };
+      } else {
+        const r = solveGA(n);
+        res = { ...r, time: performance.now() - t0 };
+      }
+    } catch(e) {
+      res = { solution: null, time: performance.now()-t0, nodes:0, conflicts:-1, memory:0, exact:false, timedOut:true };
+    }
+
+    allResults.push({ algo, n, ...res });
+
+    // Store board solutions
+    if (!boardResults[n]) boardResults[n] = {};
+    if (res.solution) boardResults[n][algo] = res.solution;
+
+    await sleep(5);
+  }
+
+  pf.style.width = '100%';
+  pl.textContent = 'Complete!';
+  await sleep(400);
+  pw.style.display = 'none';
+  btn.disabled = false;
+  btn.innerHTML = '▶ RUN';
+
+  updateCharts();
+  updateSummaryCards();
+  updateBoard();
+  updateTable();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function fmtTime(ms) {
+  if (ms < 1) return ms.toFixed(2) + ' ms';
+  if (ms < 1000) return ms.toFixed(1) + ' ms';
+  return (ms/1000).toFixed(2) + ' s';
+}
+
+// ==================== CHART.JS LOADER ====================
+function loadChartJs(cb) {
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+
+loadChartJs(setup);
+</script>
+</body>
+</html>
